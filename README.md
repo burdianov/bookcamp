@@ -1,5 +1,3 @@
-# bookcamp
-
 ## Exploratory data analysis
 
 - The distribution of the target variable
