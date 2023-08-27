@@ -61,3 +61,20 @@ y_test = np.log1p(df_test.msrp.values)
 del df_train["msrp"]
 del df_val["msrp"]
 del df_test["msrp"]
+
+base = ["engine_hp", "engine_cylinders", "highway_mpg", "city_mpg", "popularity"]
+
+df_num = df_train[base]
+
+df_num.isna().count()
+
+df_num.fillna(0)
+
+X_train = df_num.values
+
+a = np.array([1, 2, 3, 4])
+b = np.array([5, 9, 14, 4])
+
+mm = b == a
+
+feature = "num_doors_%s" % 3
