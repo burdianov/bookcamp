@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from IPython.display import display
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mutual_info_score
+from sklearn.metrics import mutual_info_score, accuracy_score
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
 
@@ -179,3 +179,28 @@ customer = {
 }
 X_test = dv.transform([customer])
 model.predict_proba(X_test)
+
+# compute the accuracy
+y_pred = model.predict_proba(X_val)[:, 1]
+churn = y_pred >= 0.5
+(churn == y_val).mean()  # accuracy
+
+thresholds = np.linspace(0, 1, 11)
+for t in thresholds:
+    churn = y_pred >= t
+    acc = accuracy_score(y_val, churn)
+    print("%0.2f %0.3f" % (t, acc))
+
+thresholds = np.linspace(0, 1, 21)
+accuracies = []
+for t in thresholds:
+    acc = accuracy_score(y_val, y_pred >= t)
+    accuracies.append(acc)
+    print("%0.2f %0.3f" % (t, acc))
+
+plt.plot(thresholds, accuracies)
+
+size_val = len(y_val)
+baseline = np.repeat(False, size_val)
+
+accuracy_score(baseline, size_val)
