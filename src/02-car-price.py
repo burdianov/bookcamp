@@ -62,6 +62,7 @@ del df_train["msrp"]
 del df_val["msrp"]
 del df_test["msrp"]
 
+<<<<<<< HEAD
 # Linear regression
 # y ≈ g(X)
 # y: vector of predicted values
@@ -111,3 +112,21 @@ def linear_regression(xi):
 
 
 w = [w0] + w
+=======
+base = ["engine_hp", "engine_cylinders", "highway_mpg", "city_mpg", "popularity"]
+
+df_num = df_train[base]
+
+df_num.isna().count()
+
+df_num.fillna(0)
+
+X_train = df_num.values
+
+a = np.array([1, 2, 3, 4])
+b = np.array([5, 9, 14, 4])
+
+mm = b == a
+
+feature = "num_doors_%s" % 3
+>>>>>>> cc3f880eca83fd879baffb002d5b0125f2d4d2ea
