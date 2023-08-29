@@ -61,3 +61,53 @@ y_test = np.log1p(df_test.msrp.values)
 del df_train["msrp"]
 del df_val["msrp"]
 del df_test["msrp"]
+
+# Linear regression
+# y ≈ g(X)
+# y: vector of predicted values
+# X: matrix of features and observations
+
+
+def g(xi):
+    pass
+
+
+w0 = 7.17
+# [w1 w2 w3 ]
+w = [0.01, 0.04, 0.002]
+n = 3
+
+
+def linear_regression(xi):
+    result = w0
+    for j in range(n):
+        result = result + xi[j] * w[j]
+    return result
+
+
+x = [1, 2, 3]
+w = [4, 5, 6]
+
+matrix = [[2, 2, 2], [3, 3, 3]]
+
+p = np.dot(x, w)
+com = np.dot(matrix, x)
+
+
+def dot(xi, w):
+    n = len(w)
+    result = 0.0
+    for i in range(n):
+        result += xi[i] * w[i]
+    return result
+
+
+pdot = dot(x, w)
+
+
+def linear_regression(xi):
+    xi = [1] + xi
+    return dot(xi, w)
+
+
+w = [w0] + w
