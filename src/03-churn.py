@@ -1,10 +1,16 @@
+import math
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
+
 from matplotlib import pyplot as plt
 from IPython.display import display
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mutual_info_score
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.linear_model import LogisticRegression
 
 df = pd.read_csv("../data/telco-customer-churn.csv")
 
@@ -94,3 +100,82 @@ def calculate_mi(series):
 
 df_mi = df_train_full[categorical].apply(calculate_mi)
 df_mi = df_mi.sort_values(ascending=False).to_frame(name="MI")
+
+df_train_full[numerical].corrwith(df_train_full.churn)
+
+train_dict = df_train[categorical + numerical].to_dict(orient="records")
+
+dv = DictVectorizer(sparse=False)
+dv.fit(train_dict)
+
+X_train = dv.transform(train_dict)
+
+X_train[0]
+
+dv.get_feature_names_out()
+
+model = LogisticRegression(solver="liblinear", random_state=1)
+model.fit(X_train, y_train)
+
+val_dict = df_val[categorical + numerical].to_dict(orient="records")
+X_val = dv.transform(val_dict)
+
+y_pred = model.predict_proba(X_val)
+y_pred = model.predict_proba(X_val)[:, 1]
+churn = y_pred >= 0.5
+
+(y_val == churn).mean()
+
+dict(zip(dv.get_feature_names_out(), model.coef_[0].round(3)))
+
+## Using the model
+customer = {
+    "customerid": "8879-zkjof",
+    "gender": "female",
+    "seniorcitizen": 0,
+    "partner": "no",
+    "dependents": "no",
+    "tenure": 41,
+    "phoneservice": "yes",
+    "multiplelines": "no",
+    "internetservice": "dsl",
+    "onlinesecurity": "yes",
+    "onlinebackup": "no",
+    "deviceprotection": "yes",
+    "techsupport": "yes",
+    "streamingtv": "yes",
+    "streamingmovies": "yes",
+    "contract": "one_year",
+    "paperlessbilling": "yes",
+    "paymentmethod": "bank_transfer_(automatic)",
+    "monthlycharges": 79.85,
+    "totalcharges": 3320.75,
+}
+
+X_test = dv.transform([customer])
+model.predict_proba(X_test)
+model.predict_proba(X_test)[0, 1]
+
+customer = {
+    "gender": "female",
+    "seniorcitizen": 1,
+    "partner": "no",
+    "dependents": "no",
+    "phoneservice": "yes",
+    "multiplelines": "yes",
+    "internetservice": "fiber_optic",
+    "onlinesecurity": "no",
+    "onlinebackup": "no",
+    "deviceprotection": "no",
+    "techsupport": "no",
+    "streamingtv": "yes",
+    "streamingmovies": "no",
+    "contract": "month-to-month",
+    "paperlessbilling": "yes",
+    "paymentmethod": "electronic_check",
+    "tenure": 1,
+    "monthlycharges": 85.7,
+    "totalcharges": 85.7,
+}
+X_test = dv.transform([customer])
+model.predict_proba(X_test)
