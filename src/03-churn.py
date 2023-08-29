@@ -204,3 +204,16 @@ size_val = len(y_val)
 baseline = np.repeat(False, size_val)
 
 accuracy_score(baseline, y_val)
+
+t = 0.5
+predict_churn = y_pred >= t
+predict_no_churn = y_pred < t
+
+actual_churn = y_val == 1
+actual_no_churn = y_val == 0
+
+true_positive = (predict_churn & actual_churn).sum()
+false_positive = (predict_churn & actual_no_churn).sum()
+
+false_negative = (predict_no_churn & actual_churn).sum()
+true_negative = (predict_no_churn & actual_no_churn).sum()
