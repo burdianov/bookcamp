@@ -203,4 +203,4 @@ plt.plot(thresholds, accuracies)
 size_val = len(y_val)
 baseline = np.repeat(False, size_val)
 
-accuracy_score(baseline, size_val)
+accuracy_score(baseline, y_val)
