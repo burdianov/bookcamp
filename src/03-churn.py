@@ -217,3 +217,13 @@ false_positive = (predict_churn & actual_no_churn).sum()
 
 false_negative = (predict_no_churn & actual_churn).sum()
 true_negative = (predict_no_churn & actual_no_churn).sum()
+
+confusion_table = np.array(
+    [[true_negative, false_positive], [false_negative, true_positive]]
+)
+
+confusion_table_fractions = confusion_table / confusion_table.sum()
+
+accuracy = (true_negative + true_positive) / (
+    true_negative + true_positive + false_negative + false_positive
+)
