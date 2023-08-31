@@ -8,7 +8,13 @@ from matplotlib import pyplot as plt
 from IPython.display import display
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mutual_info_score, accuracy_score
+from sklearn.metrics import (
+    mutual_info_score,
+    accuracy_score,
+    roc_curve,
+    auc,
+    roc_auc_score,
+)
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
 
@@ -231,3 +237,88 @@ accuracy = (true_negative + true_positive) / (
 precision = true_positive / (true_positive + false_positive)
 
 recall = true_positive / (true_positive + false_negative)
+
+false_positive_rate = false_positive / (false_positive + true_negative)
+# the lower, the better
+
+true_positive_rate = true_positive / (true_positive + false_negative)
+# true_positive_rate == recall; the higher, the better
+
+scores = []
+
+thresholds = np.linspace(0, 1, 101)
+
+for t in thresholds:
+    tp = ((y_pred >= t) & (y_val == 1)).sum()
+    fp = ((y_pred >= t) & (y_val == 0)).sum()
+    fn = ((y_pred < t) & (y_val == 1)).sum()
+    tn = ((y_pred < t) & (y_val == 0)).sum()
+    scores.append((t, tp, fp, fn, tn))
+
+df_scores = pd.DataFrame(scores)
+df_scores.columns = ["threshold", "tp", "fp", "fn", "tn"]
+df_scores[::10]
+
+df_scores["tpr"] = df_scores.tp / (df_scores.tp + df_scores.fn)
+df_scores["fpr"] = df_scores.fp / (df_scores.fp + df_scores.tn)
+df_scores[::10]
+
+plt.plot(df_scores.threshold, df_scores.tpr, label="TPR")
+plt.plot(df_scores.threshold, df_scores.fpr, label="FPR")
+plt.legend()
+
+np.random.seed(1)
+y_rand = np.random.uniform(0, 1, size=len(y_val))
+
+
+def tpr_fpr_dataframe(y_val, y_pred):
+    scores = []
+    thresholds = np.linspace(0, 1, 101)
+
+    for t in thresholds:
+        tp = ((y_pred >= t) & (y_val == 1)).sum()
+        fp = ((y_pred >= t) & (y_val == 0)).sum()
+        fn = ((y_pred < t) & (y_val == 1)).sum()
+        tn = ((y_pred < t) & (y_val == 0)).sum()
+        scores.append((t, tp, fp, fn, tn))
+
+    df_scores = pd.DataFrame(scores)
+    df_scores.columns = ["threshold", "tp", "fp", "fn", "tn"]
+    df_scores["tpr"] = df_scores.tp / (df_scores.tp + df_scores.fn)
+    df_scores["fpr"] = df_scores.fp / (df_scores.fp + df_scores.tn)
+
+    return df_scores
+
+
+df_rand = tpr_fpr_dataframe(y_val, y_rand)
+
+plt.plot(df_rand.threshold, df_rand.tpr, label="TPR")
+plt.plot(df_rand.threshold, df_rand.fpr, label="FPR")
+plt.legend()
+
+num_neg = (y_val == 0).sum()
+num_pos = (y_val == 1).sum()
+y_ideal = np.repeat([0, 1], [num_neg, num_pos])
+y_pred_ideal = np.linspace(0, 1, num_neg + num_pos)
+df_ideal = tpr_fpr_dataframe(y_ideal, y_pred_ideal)
+
+plt.plot(df_ideal.threshold, df_ideal.tpr, label="TPR")
+plt.plot(df_ideal.threshold, df_ideal.fpr, label="FPR")
+plt.legend()
+
+plt.figure(figsize=(5, 5))
+plt.plot(df_scores.fpr, df_scores.tpr, label="Model")
+plt.plot(df_rand.fpr, df_rand.tpr, label="Random")
+plt.plot(df_ideal.fpr, df_ideal.tpr, label="Ideal")
+plt.legend()
+
+plt.figure(figsize=(5, 5))
+plt.plot(df_scores.fpr, df_scores.tpr)
+plt.plot([0, 1], [0, 1])
+
+fpr, tpr, thresholds = roc_curve(y_val, y_pred)
+plt.figure(figsize=(5, 5))
+plt.plot(fpr, tpr)
+plt.plot([0, 1], [0, 1])
+
+auc(df_scores.fpr, df_scores.tpr)
