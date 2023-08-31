@@ -17,6 +17,7 @@ from sklearn.metrics import (
 )
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
+import pickle
 
 df = pd.read_csv("../data/telco-customer-churn.csv")
 
@@ -386,3 +387,53 @@ dv, model = train(df_train_full, y_train, C=0.5)
 y_pred = predict(df_test, dv, model)
 auc = roc_auc_score(y_test, y_pred)
 print("auc = %.3f" % auc)
+
+customer = {
+    "customerid": "8879-zkjof",
+    "gender": "female",
+    "seniorcitizen": 0,
+    "partner": "no",
+    "dependents": "no",
+    "tenure": 41,
+    "phoneservice": "yes",
+    "multiplelines": "no",
+    "internetservice": "dsl",
+    "onlinesecurity": "yes",
+    "onlinebackup": "no",
+    "deviceprotection": "yes",
+    "techsupport": "yes",
+    "streamingtv": "yes",
+    "streamingmovies": "yes",
+    "contract": "one_year",
+    "paperlessbilling": "yes",
+    "paymentmethod": "bank_transfer_(automatic)",
+    "monthlycharges": 79.85,
+    "totalcharges": 3320.75,
+}
+
+df = pd.DataFrame([customer])
+y_pred = predict(df, dv, model)
+y_pred[0]
+
+
+def predict_single(customer, dv, model):
+    X = dv.transform([customer])
+    y_pred = model.predict_proba(X)[:, 1]
+    return y_pred[0]
+
+
+predict_single(customer, dv, model)
+
+with open("churn-model.bin", "wb") as f_out:
+    pickle.dump(model, f_out)
+
+# same thing:
+f_out = open("churn-model.bin", "wb")
+pickle.dump(model, f_out)
+f_out.close()
+
+with open("churn-model.bin", "wb") as f_out:
+    pickle.dump((dv, model), f_out)
+
+with open("churn-model.bin", "rb") as f_in:
+    dv, model = pickle.load(f_in)
