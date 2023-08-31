@@ -7,7 +7,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from IPython.display import display
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import (
     mutual_info_score,
     accuracy_score,
@@ -322,3 +322,67 @@ plt.plot(fpr, tpr)
 plt.plot([0, 1], [0, 1])
 
 auc(df_scores.fpr, df_scores.tpr)
+roc_auc_score(y_val, y_pred)
+
+
+def train(df, y):
+    cat = df[categorical + numerical].to_dict(orient="records")
+    dv = DictVectorizer(sparse=False)
+    dv.fit(cat)
+    X = dv.transform(cat)
+    model = LogisticRegression(solver="liblinear")
+    model.fit(X, y)
+    return dv, model
+
+
+def predict(df, dv, model):
+    cat = df[categorical + numerical].to_dict(orient="records")
+    X = dv.transform(cat)
+    y_pred = model.predict_proba(X)[:, 1]
+    return y_pred
+
+
+kfold = KFold(n_splits=10, shuffle=True, random_state=1)
+aucs = []
+for train_idx, val_idx in kfold.split(df_train_full):
+    df_train = df_train_full.iloc[train_idx]
+    df_val = df_train_full.iloc[val_idx]
+    y_train = df_train.churn.values
+    y_val = df_val.churn.values
+    dv, model = train(df_train, y_train)
+    y_pred = predict(df_val, dv, model)
+    auc = roc_auc_score(y_val, y_pred)
+    aucs.append(auc)
+
+
+def train(df, y, C):
+    cat = df[categorical + numerical].to_dict(orient="records")
+    dv = DictVectorizer(sparse=False)
+    dv.fit(cat)
+    X = dv.transform(cat)
+    model = LogisticRegression(solver="liblinear", C=C)
+    model.fit(X, y)
+    return dv, model
+
+
+nfolds = 5
+kfold = KFold(n_splits=nfolds, shuffle=True, random_state=1)
+for C in [0.001, 0.01, 0.1, 0.5, 1, 10]:
+    aucs = []
+    for train_idx, val_idx in kfold.split(df_train_full):
+        df_train = df_train_full.iloc[train_idx]
+        df_val = df_train_full.iloc[val_idx]
+        y_train = df_train.churn.values
+        y_val = df_val.churn.values
+        dv, model = train(df_train, y_train, C=C)
+        y_pred = predict(df_val, dv, model)
+        auc = roc_auc_score(y_val, y_pred)
+        aucs.append(auc)
+    print("C=%s, auc = %0.3f ± %0.3f" % (C, np.mean(aucs), np.std(aucs)))
+
+y_train = df_train_full.churn.values
+y_test = df_test.churn.values
+dv, model = train(df_train_full, y_train, C=0.5)
+y_pred = predict(df_test, dv, model)
+auc = roc_auc_score(y_test, y_pred)
+print("auc = %.3f" % auc)
