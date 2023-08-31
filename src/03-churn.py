@@ -227,3 +227,7 @@ confusion_table_fractions = confusion_table / confusion_table.sum()
 accuracy = (true_negative + true_positive) / (
     true_negative + true_positive + false_negative + false_positive
 )
+
+precision = true_positive / (true_positive + false_positive)
+
+recall = true_positive / (true_positive + false_negative)
